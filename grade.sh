@@ -1,4 +1,4 @@
-CPATH='.:lib/hamcrest-core-1.3.jar:lib/junit-4.13.2.jar'
+CPATH='.;lib/hamcrest-core-1.3.jar;lib/junit-4.13.2.jar'
 
 rm -rf student-submission
 rm -rf grading-area
@@ -20,6 +20,7 @@ then
     echo "File found"
 else
     echo "File not found"
+    echo "Your score is 0 / 1"
     exit
 fi
 
@@ -32,19 +33,26 @@ javac -cp $CPATH *.java
 if [[ $? -ne 0 ]]
 then 
     echo "Did not compile successfully"
+    echo "Your score is 0 / 1"
     exit
 else   
     echo "Compiled successfully"
 fi
 
 java -cp $CPATH org.junit.runner.JUnitCore TestListExamples > junit-output.txt
-grep "Tests run:" junit-output.txt > results.txt
-FAILURES=$(cut -d" " -f 6 results.txt)
-cut -d" " -f 3 results.txt > testsrun.txt
-TESTSRUN=$(cut -d"," -f 1 testsrun.txt)
-SUCCESS=$(($TESTSRUN - $FAILURES))
-echo "Your score is $SUCCESS / $TESTSRUN"
 
+if grep -q "Tests run:" "junit-output.txt";
+then
+    OUTPUT=$(grep "Tests run:" junit-output.txt)
+    FAILURES=$(echo "$OUTPUT" | cut -d" " -f6)
+    TESTSRUN=$(echo "$OUTPUT" | cut -d"," -f1 | cut -d" " -f3)
+    SUCCESS=$(( $TESTSRUN - $FAILURES ))
+    echo "Your score is $SUCCESS / $TESTSRUN"
+else
+    OUTPUT=$(grep "OK" junit-output.txt)
+    TESTSRUN=$(echo "$OUTPUT" | cut -d'(' -f2 | cut -d' ' -f1)
+    echo "Your score is $TESTSRUN / $TESTSRUN"
+fi
 
 
 # grep exit codes
